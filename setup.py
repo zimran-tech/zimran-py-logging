@@ -12,7 +12,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_namespace_packages(include=['zimran.*']),
-    install_requires=['loguru', 'sentry-sdk[fastapi]'],
+    install_requires=['loguru', 'sentry-sdk'],
     python_requires='>=3.10',
     zip_file=False,
 )
