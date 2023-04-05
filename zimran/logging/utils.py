@@ -26,4 +26,9 @@ def setup_logger(debug: bool) -> None:
 
 
 def setup_sentry(dsn: str, environment: str) -> None:
-    init(dsn=dsn, environment=environment, sample_rate=_get_sample_rate(environment))
+    try:
+        sample_rate = _get_sample_rate(environment)
+    except InvalidEnvironmentError:
+        return
+
+    init(dsn=dsn, environment=environment, sample_rate=sample_rate)
