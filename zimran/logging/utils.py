@@ -1,5 +1,6 @@
 import sys
 import uuid
+from typing import Any
 
 from loguru import logger
 from sentry_sdk import init
@@ -35,14 +36,14 @@ def setup_sentry(dsn: str, environment: str) -> None:
     init(dsn=dsn, environment=environment, sample_rate=sample_rate)
 
 
-def setup_fastapi_logger(app, debug: bool):
+def setup_fastapi_logger(app: Any, debug: bool) -> None:
     setup_logger(debug=debug)
 
     @app.middleware('http')
-    def logging_requests(request, call_next):
+    def logging_requests(request, call_next):  # type: ignore
         correlation_id = request.headers.get('x-zmrn-correlation-id')
         if not correlation_id:
-            _set_request_correlation_id(request)
+            _set_request_correlation_id(request)  # type: ignore
 
         response = call_next(request)
         context = {
@@ -56,7 +57,7 @@ def setup_fastapi_logger(app, debug: bool):
         return response
 
 
-def _set_request_correlation_id(request):
+def _set_request_correlation_id(request):  # type: ignore
     headers = request.headers.mutablecopy()
     headers.append('x-zmrn-correlation-id', str(uuid.uuid4()))
     request._headers = headers
