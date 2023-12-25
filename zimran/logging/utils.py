@@ -1,7 +1,10 @@
 import sys
+from typing import Any
 
 from loguru import logger
 from sentry_sdk import init
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from zimran.logging.exceptions import InvalidEnvironmentError
 
@@ -25,10 +28,12 @@ def setup_logger(debug: bool) -> None:
         logger.add(sys.stdout, level='INFO', serialize=True)
 
 
-def setup_sentry(dsn: str, environment: str, **kwargs) -> None:
+def setup_sentry(dsn: str, environment: str, **kwargs: dict[str, Any]) -> None:
     try:
         sample_rate = _get_sample_rate(environment)
     except InvalidEnvironmentError:
         return
 
-    init(dsn=dsn, environment=environment, sample_rate=sample_rate, **kwargs)
+    kwargs.setdefault('integrations', [FastApiIntegration(), LoguruIntegration()])  # type: ignore
+
+    init(dsn=dsn, environment=environment, sample_rate=sample_rate, **kwargs)  # type: ignore
