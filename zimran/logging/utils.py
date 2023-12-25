@@ -25,10 +25,10 @@ def setup_logger(debug: bool) -> None:
         logger.add(sys.stdout, level='INFO', serialize=True)
 
 
-def setup_sentry(dsn: str, environment: str) -> None:
+def setup_sentry(*, dsn: str, environment: str, **kwargs) -> None:
     try:
         sample_rate = _get_sample_rate(environment)
     except InvalidEnvironmentError:
         return
 
-    init(dsn=dsn, environment=environment, sample_rate=sample_rate)
+    init(dsn=dsn, environment=environment, sample_rate=sample_rate, **kwargs)
