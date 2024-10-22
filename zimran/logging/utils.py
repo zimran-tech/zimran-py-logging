@@ -1,5 +1,4 @@
 import sys
-from typing import Any
 
 from loguru import logger
 from sentry_sdk import init
