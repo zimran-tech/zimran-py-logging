@@ -11,31 +11,36 @@ class GDPRPatcher:
         self.__compiled_patterns: list[re.Pattern] = self.__get_compiled_patterns()
 
     def __call__(self, record: dict[str, Any]) -> None:
-        sensitive_fields_detected = []
+        if sensitive_fields := self.__detect_sensitive_fields(record):
+            if record['level']['name'] == 'INFO':
+                record['level']['name'] = 'WARNING'
+                record['level']['no'] = 30
+            record['extra']['LSF'] = sensitive_fields   # Logging of Sensitive Fields
+            record['message'] += ' # POTENTIAL USE OF NON-COMPLIANT DATA.'
+
+    def __detect_sensitive_fields(self, record: dict[str, Any]) -> list[str]:
+        sensitive_fields: list = []
 
         if self.__contains_sensitive_data(record['message']):
-            sensitive_fields_detected.append('message')
+            sensitive_fields.append('message')
 
-        extra = record['extra']
+        extra = record.setdefault('extra', {})
+
         for key, value in extra.items():
             if isinstance(value, (dict, list, tuple, set)):
                 # complex data structures may contain sensitive information
-                sensitive_fields_detected.append(key)
+                sensitive_fields.append(key)
 
             elif isinstance(value, str):
                 if self.__contains_sensitive_data(value):
-                    sensitive_fields_detected.append(key)
+                    sensitive_fields.append(key)
 
             elif not isinstance(value, (int, float, bool, type(None))):
                 # for primitive types (int, float, bool, None), do nothing
                 # any other non-primitive types may contain sensitive information
-                sensitive_fields_detected.append(key)
+                sensitive_fields.append(key)
 
-        if sensitive_fields_detected:
-            record['level']['name'] = 'WARNING'
-            record['level']['no'] = 30
-            record['extra']['sensitive_fields'] = sensitive_fields_detected
-            record['message'] += ' - This log possibly contains non-compliant fields.'
+        return sensitive_fields
 
     def __contains_sensitive_data(self, text: str) -> bool:
         for regex in self.__compiled_patterns:
