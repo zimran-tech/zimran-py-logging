@@ -1,4 +1,5 @@
 # basic GDPR patterns for sensitive and personal information
+# TODO: fill with patterns
 
 sensitive_patterns:
   # email addresses
