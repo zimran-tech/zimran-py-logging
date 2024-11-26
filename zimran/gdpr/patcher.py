@@ -12,11 +12,7 @@ class GDPRPatcher:
 
     def __call__(self, record: dict[str, Any]) -> None:
         if sensitive_fields := self.__detect_sensitive_fields(record):
-            if record['level']['name'] == 'INFO':
-                record['level']['name'] = 'WARNING'
-                record['level']['no'] = 30
             record['extra']['LSF'] = sensitive_fields   # Logging of Sensitive Fields
-            record['message'] += ' # POTENTIAL USE OF NON-COMPLIANT DATA.'
 
     def __detect_sensitive_fields(self, record: dict[str, Any]) -> list[str]:
         sensitive_fields: list = []
@@ -43,11 +39,7 @@ class GDPRPatcher:
         return sensitive_fields
 
     def __contains_sensitive_data(self, text: str) -> bool:
-        for regex in self.__compiled_patterns:
-            if regex.search(text):
-                return True
-
-        return False
+        return any(regex.search(text) for regex in self.__compiled_patterns)
 
     def __get_compiled_patterns(self) -> list[re.Pattern]:
         patterns_config = read_logger_config(
