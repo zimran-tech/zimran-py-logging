@@ -2,13 +2,30 @@ import sys
 from typing import Any
 
 from loguru import logger
-from sentry_sdk import init
+import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from zimran.gdpr import GDPRPatcher
 from zimran.logging.exceptions import InvalidEnvironmentError
 from zimran.logging.utils import _get_sample_rate
+
+
+def sentry_sink(message):
+    record = message.record
+    extra = record.get('extra', {})
+
+    if 'LSF' in extra:
+        try:
+            with sentry_sdk.new_scope() as scope:
+                scope.set_extra('record', record)
+                scope.set_extra('LSF', extra['LSF'])
+                sentry_sdk.capture_message(
+                    message='Logging record potentially contains non-compliant data.',
+                    level='error',
+                )
+        except Exception as exc:
+            pass
 
 
 def setup_logger(debug: bool, environment: str, logger_config: str | None = None) -> None:
@@ -22,6 +39,7 @@ def setup_logger(debug: bool, environment: str, logger_config: str | None = None
     if environment == 'staging':
         patcher = GDPRPatcher(logger_config)
         logger.configure(patcher=patcher)
+        logger.add(sentry_sink)
 
 
 def setup_sentry(dsn: str, environment: str, **kwargs: Any) -> None:
@@ -32,4 +50,4 @@ def setup_sentry(dsn: str, environment: str, **kwargs: Any) -> None:
 
     kwargs.setdefault('integrations', [FastApiIntegration(), LoguruIntegration()])  # type: ignore
 
-    init(dsn=dsn, environment=environment, sample_rate=sample_rate, **kwargs)  # type: ignore
+    sentry_sdk.init(dsn=dsn, environment=environment, sample_rate=sample_rate, **kwargs)  # type: ignore
