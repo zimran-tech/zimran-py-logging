@@ -14,6 +14,7 @@ def test_read_logger_config(tmp_path):
     config = read_logger_config(str(config_file))
     assert isinstance(config, dict)
     assert 'sensitive_patterns' in config
+    assert config['sensitive_patterns'] == ['\\b\\d{3}-\\d{2}-\\d{4}\\b']
 
 
 def test_read_logger_config_invalid():

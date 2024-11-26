@@ -1,4 +1,4 @@
-# basic GDPR-sensitive patterns
+# basic GDPR patterns for sensitive and personal information
 
 sensitive_patterns:
   # email addresses

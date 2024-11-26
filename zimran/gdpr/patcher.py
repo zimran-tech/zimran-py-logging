@@ -45,14 +45,15 @@ class GDPRPatcher:
         return False
 
     def __get_compiled_patterns(self) -> list[re.Pattern]:
-        patterns_config = read_logger_config(os.path.join(os.path.dirname(__file__), 'patterns.yaml'))
+        patterns_config = read_logger_config(
+            os.path.join(os.path.dirname(__file__), 'patterns.yaml')
+        )
         service_config = read_logger_config(self.config)
 
         patterns = patterns_config.get('sensitive_patterns', [])
         service_patterns = service_config.get('sensitive_patterns', [])
 
         compiled_patterns = [
-            re.compile(pattern)
-            for pattern in list(set(patterns + service_patterns))
+            re.compile(pattern) for pattern in list(set(patterns + service_patterns))
         ]
         return compiled_patterns
