@@ -32,7 +32,7 @@ class GDPRPatcher:
                 sensitive_fields_detected.append(key)
 
         if sensitive_fields_detected:
-            record['level']['name'] = "WARNING"
+            record['level']['name'] = 'WARNING'
             record['level']['no'] = 30
             record['extra']['sensitive_fields'] = sensitive_fields_detected
             record['message'] += ' - This log possibly contains non-compliant fields.'
@@ -46,7 +46,7 @@ class GDPRPatcher:
 
     def __get_compiled_patterns(self) -> list[re.Pattern]:
         patterns_config = read_logger_config(
-            os.path.join(os.path.dirname(__file__), 'patterns.yaml')
+            os.path.join(os.path.dirname(__file__), 'patterns.yaml'),
         )
         service_config = read_logger_config(self.config)
 

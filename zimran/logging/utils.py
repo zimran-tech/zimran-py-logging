@@ -3,7 +3,7 @@ from typing import Any
 
 import yaml
 
-from zimran.logging.exceptions import InvalidEnvironmentError, InvalidConfigurationError
+from zimran.logging.exceptions import InvalidConfigurationError, InvalidEnvironmentError
 
 
 def _get_sample_rate(environment: str) -> float:
