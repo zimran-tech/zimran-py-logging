@@ -14,7 +14,7 @@ from zimran.logging.utils import _get_sample_rate
 def sentry_sink(message):
     record = message.record
 
-    if ncd :=  record.get('extra', {}).get('ncd', None):
+    if ncd := record.get('extra', {}).get('ncd', None):
         try:
             with sentry_sdk.new_scope() as scope:
                 scope.set_extra('Record', record)

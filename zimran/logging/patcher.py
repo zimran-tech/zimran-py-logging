@@ -1,6 +1,6 @@
 import os.path
 import re
-from typing import Any, TypedDict, Literal
+from typing import Any, TypedDict
 
 from zimran.logging.utils import read_logger_config
 
@@ -39,7 +39,7 @@ class GDPRPatcher:
 
     def __call__(self, record: dict[str, Any]) -> None:
         if data := self.__detect_non_compliant_fields(record):
-            record['extra']['ncd'] = self.__non_compliant_fields
+            record['extra']['ncd'] = data
 
     def __detect_non_compliant_fields(self, record: dict[str, Any]) -> list[NonCompliantField]:
         non_compliant_fields: list[NonCompliantField] = []
