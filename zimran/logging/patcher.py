@@ -44,16 +44,16 @@ class GDPRPatcher:
         self.__non_compliant_fields: list[NonCompliantField] = []
 
     def __call__(self, record: dict[str, Any]) -> None:
-        if non_compliant_data := self.__detect_non_compliant_fields(record):
-            record['extra']['ncd'] = non_compliant_data
+        self.__detect_non_compliant_fields(record)
 
-    def __detect_non_compliant_fields(self, record: dict[str, Any]) -> list[NonCompliantField]:
-        non_compliant_fields: list = []
+        if self.__non_compliant_fields:
+            record['extra']['ncd'] = self.__non_compliant_fields
+
+    def __detect_non_compliant_fields(self, record: dict[str, Any]) -> None:
+        extra = record.setdefault('extra', {})
 
         if self.__contains_sensitive_data(record['message']):
             self.__update_non_compliant_fields(record, key='message', mapper='m')
-
-        extra = record.setdefault('extra', {})
 
         for key, value in extra.items():
             if not isinstance(value, PRIMITIVE_TYPES):
@@ -63,8 +63,6 @@ class GDPRPatcher:
 
             elif isinstance(value, str) and self.__contains_sensitive_data(value):
                 self.__update_non_compliant_fields(record, key=key, mapper='f')
-
-        return non_compliant_fields
 
     def __contains_sensitive_data(self, value: str) -> bool:
         return any(regex.search(value) for regex in self.__compiled_patterns)
