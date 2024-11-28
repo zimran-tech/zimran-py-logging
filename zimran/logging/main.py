@@ -1,13 +1,13 @@
 import sys
 from typing import Any
 
-from loguru import logger
 import sentry_sdk
+from loguru import logger
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
-from zimran.logging.patcher import GDPRPatcher
 from zimran.logging.exceptions import InvalidEnvironmentError
+from zimran.logging.patcher import GDPRPatcher
 from zimran.logging.utils import _get_sample_rate
 
 
@@ -24,7 +24,7 @@ def sentry_sink(message):
                     message='Log record contains non-compliant data',
                     level='warning',
                 )
-        except Exception as exc:
+        except Exception:
             pass
 
 

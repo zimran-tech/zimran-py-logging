@@ -2,10 +2,10 @@ import pytest
 
 from zimran.logging.patcher import (
     GDPRPatcher,
-    SENSITIVE_MESSAGE,
+    MASKED,
     NON_PRIMITIVE_TYPE,
     SENSITIVE_FIELD,
-    MASKED,
+    SENSITIVE_MESSAGE,
 )
 
 
@@ -55,7 +55,7 @@ def test_sensitive_info_in_extra(gdpr_patcher):
         {
             'field': 'ip_address',
             'warning': SENSITIVE_FIELD,
-        }
+        },
     ]
 
 
@@ -134,7 +134,7 @@ def test_mask_sensitive_info_in_extra(production_gdpr_patcher):
         {
             'field': 'ip_address',
             'warning': SENSITIVE_FIELD,
-        }
+        },
     ]
     assert record['extra']['email'] == MASKED
     assert record['extra']['ip_address'] == MASKED
@@ -174,4 +174,3 @@ def test_mask_no_sensitive_info(production_gdpr_patcher):
     }
     production_gdpr_patcher(record)
     assert 'ncd' not in record['extra']
-
