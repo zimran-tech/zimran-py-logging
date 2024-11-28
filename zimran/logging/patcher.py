@@ -21,15 +21,10 @@ MASKED = '[MASKED]'
 
 PRIMITIVE_TYPES = (int, float, str, bool, type(None))
 
-warning_mapper = {
-    'm': SENSITIVE_MESSAGE,
-    'f': SENSITIVE_FIELD,
-    't': NON_PRIMITIVE_TYPE,
-}
 
 class NonCompliantField(TypedDict):
     field: str
-    message: str
+    warning: str
 
 
 class GDPRPatcher:
@@ -41,47 +36,46 @@ class GDPRPatcher:
         self.environment = environment
         self.config = config
         self.__compiled_patterns: list[re.Pattern] = self.__get_compiled_patterns()
-        self.__non_compliant_fields: list[NonCompliantField] = []
 
     def __call__(self, record: dict[str, Any]) -> None:
-        self.__detect_non_compliant_fields(record)
-
-        if self.__non_compliant_fields:
+        if data := self.__detect_non_compliant_fields(record):
             record['extra']['ncd'] = self.__non_compliant_fields
 
-    def __detect_non_compliant_fields(self, record: dict[str, Any]) -> None:
+    def __detect_non_compliant_fields(self, record: dict[str, Any]) -> list[NonCompliantField]:
+        non_compliant_fields: list[NonCompliantField] = []
         extra = record.setdefault('extra', {})
 
         if self.__contains_sensitive_data(record['message']):
-            self.__update_non_compliant_fields(record, key='message', mapper='m')
+            non_compliant_fields.append({
+            'field': 'message',
+            'warning': SENSITIVE_MESSAGE,
+        })
+            if self.environment == 'production':
+                record['message'] = MASKED
 
         for key, value in extra.items():
             if not isinstance(value, PRIMITIVE_TYPES):
                 # non-primitive types are not recommended to log
                 # as they may contain sensitive data and typically are overheads
-                self.__update_non_compliant_fields(record, key=key, mapper='t')
+                non_compliant_fields.append({
+                    'field': key,
+                    'warning': NON_PRIMITIVE_TYPE,
+                })
+                if self.environment == 'production':
+                    record['extra'][key] = MASKED
 
             elif isinstance(value, str) and self.__contains_sensitive_data(value):
-                self.__update_non_compliant_fields(record, key=key, mapper='f')
+                non_compliant_fields.append({
+                    'field': key,
+                    'warning': SENSITIVE_FIELD,
+                })
+                if self.environment == 'production':
+                    record['extra'][key] = MASKED
+
+        return non_compliant_fields
 
     def __contains_sensitive_data(self, value: str) -> bool:
         return any(regex.search(value) for regex in self.__compiled_patterns)
-
-    def __update_non_compliant_fields(
-            self,
-            record: dict[str, Any],
-            key: str,
-            mapper: Literal['m', 'f', 't'],
-    ) -> None:
-        self.__non_compliant_fields.append({
-            'field': key,
-            'message': warning_mapper[mapper],
-        })
-        if self.environment == 'production':
-            if key == 'message':
-                record['message'] = MASKED
-
-            record['extra'][key] = MASKED
 
     def __get_compiled_patterns(self) -> list[re.Pattern]:
         patterns_config = read_logger_config(
