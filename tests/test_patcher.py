@@ -1,6 +1,6 @@
 import pytest
 
-from zimran.gdpr.patcher import GDPRPatcher
+from zimran.logging.patcher import GDPRPatcher
 
 
 @pytest.fixture

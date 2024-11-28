@@ -6,7 +6,7 @@ import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
-from zimran.gdpr import GDPRPatcher
+from zimran.logging.patcher import GDPRPatcher
 from zimran.logging.exceptions import InvalidEnvironmentError
 from zimran.logging.utils import _get_sample_rate
 
