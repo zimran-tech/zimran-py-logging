@@ -16,9 +16,6 @@ class NonCompliantField(TypedDict):
     message: str
 
 
-NonCompliantData = list[NonCompliantField]
-
-
 class GDPRPatcher:
     def __init__(self, config: str | None = None):
         self.config = config
@@ -26,7 +23,7 @@ class GDPRPatcher:
 
     def __call__(self, record: dict[str, Any]) -> None:
         if non_compliant_data := self.__detect_non_compliant_fields(record):
-            record['extra']['ncd']: NonCompliantData = non_compliant_data
+            record['extra']['ncd'] = non_compliant_data
 
     def __detect_non_compliant_fields(self, record: dict[str, Any]) -> list[NonCompliantField]:
         non_compliant_fields: list = []

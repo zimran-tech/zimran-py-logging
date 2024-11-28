@@ -13,15 +13,15 @@ from zimran.logging.utils import _get_sample_rate
 
 def sentry_sink(message):
     record = message.record
-    extra = record.get('extra', {})
 
-    if 'LSF' in extra:
+    if ncd :=  record.get('extra', {}).get('ncd', None):
         try:
             with sentry_sdk.new_scope() as scope:
-                scope.set_extra('record', record)
-                scope.set_extra('LSF', extra['LSF'])
+                scope.set_extra('Record', record)
+                scope.set_extra('Non Compliant Data', ncd)
+
                 sentry_sdk.capture_message(
-                    message='Logging record contains non-compliant data',
+                    message='Log record contains non-compliant data',
                     level='warning',
                 )
         except Exception as exc:
