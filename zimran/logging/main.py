@@ -21,8 +21,8 @@ def sentry_sink(message):
                 scope.set_extra('record', record)
                 scope.set_extra('LSF', extra['LSF'])
                 sentry_sdk.capture_message(
-                    message='Logging record potentially contains non-compliant data.',
-                    level='error',
+                    message='Logging record contains non-compliant data',
+                    level='warning',
                 )
         except Exception as exc:
             pass
