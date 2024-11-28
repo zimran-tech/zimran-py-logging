@@ -78,6 +78,9 @@ class GDPRPatcher:
             'message': warning_mapper[mapper],
         })
         if self.environment == 'production':
+            if key == 'message':
+                record['message'] = MASKED
+
             record['extra'][key] = MASKED
 
     def __get_compiled_patterns(self) -> list[re.Pattern]:
