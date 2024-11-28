@@ -36,10 +36,9 @@ def setup_logger(debug: bool, environment: str, logger_config: str | None = None
     else:
         logger.add(sys.stdout, level='INFO', serialize=True)
 
-    if environment == 'staging':
-        patcher = GDPRPatcher(logger_config)
-        logger.configure(patcher=patcher)
-        logger.add(sentry_sink)
+    patcher = GDPRPatcher(config=logger_config, environment=environment)
+    logger.configure(patcher=patcher)
+    logger.add(sentry_sink)
 
 
 def setup_sentry(dsn: str, environment: str, **kwargs: Any) -> None:
