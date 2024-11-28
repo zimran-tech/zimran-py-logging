@@ -1,8 +1,22 @@
 import os.path
 import re
-from typing import Any
+from typing import Any, TypedDict
 
 from zimran.logging.utils import read_logger_config
+
+
+NON_PRIMITIVE_TYPE = 'field\'s value type is non-primitive; consider to provide logs with primitive type arguments'
+SENSITIVE_FIELD = 'field\'s value is sensitive; consider to provide logs with non-sensitive values'
+
+PRIMITIVE_TYPES = (int, float, str, bool, type(None))
+
+
+class NonCompliantField(TypedDict):
+    field: str
+    message: str
+
+
+NonCompliantData = list[NonCompliantField]
 
 
 class GDPRPatcher:
@@ -11,32 +25,36 @@ class GDPRPatcher:
         self.__compiled_patterns: list[re.Pattern] = self.__get_compiled_patterns()
 
     def __call__(self, record: dict[str, Any]) -> None:
-        if sensitive_fields := self.__detect_sensitive_fields(record):
-            record['extra']['LSF'] = sensitive_fields   # Logging of Sensitive Fields
+        if non_compliant_data := self.__detect_non_compliant_fields(record):
+            record['extra']['ncd']: NonCompliantData = non_compliant_data
 
-    def __detect_sensitive_fields(self, record: dict[str, Any]) -> list[str]:
-        sensitive_fields: list = []
+    def __detect_non_compliant_fields(self, record: dict[str, Any]) -> list[NonCompliantField]:
+        non_compliant_fields: list = []
 
         if self.__contains_sensitive_data(record['message']):
-            sensitive_fields.append('message')
+            non_compliant_fields.append({
+                'field': 'message',
+                'message': SENSITIVE_FIELD,
+            })
 
         extra = record.setdefault('extra', {})
 
         for key, value in extra.items():
-            if isinstance(value, (dict, list, tuple, set)):
-                # complex data structures may contain sensitive information
-                sensitive_fields.append(key)
+            if not isinstance(value, PRIMITIVE_TYPES):
+                # non-primitive types are not recommended to log
+                # as they may contain sensitive data and typically are overheads
+                non_compliant_fields.append({
+                    'field': key,
+                    'message': NON_PRIMITIVE_TYPE,
+                })
 
-            elif isinstance(value, str):
-                if self.__contains_sensitive_data(value):
-                    sensitive_fields.append(key)
+            elif isinstance(value, str) and self.__contains_sensitive_data(value):
+                non_compliant_fields.append({
+                    'field': key,
+                    'message': SENSITIVE_FIELD,
+                })
 
-            elif not isinstance(value, (int, float, bool, type(None))):
-                # for primitive types (int, float, bool, None), do nothing
-                # any other non-primitive types may contain sensitive information
-                sensitive_fields.append(key)
-
-        return sensitive_fields
+        return non_compliant_fields
 
     def __contains_sensitive_data(self, text: str) -> bool:
         return any(regex.search(text) for regex in self.__compiled_patterns)
