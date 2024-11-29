@@ -11,19 +11,21 @@ from zimran.logging.patcher import GDPRPatcher
 from zimran.logging.utils import _get_sample_rate
 
 
-def sentry_sink(message):
+def sentry_sink(message) -> None:
     record = message.record
 
     if ncd := record.get('extra', {}).get('ncd', None):
         try:
-            with sentry_sdk.new_scope() as scope:
-                scope.set_extra('Record', record)
-                scope.set_extra('Non Compliant Data', ncd)
-
-                sentry_sdk.capture_message(
-                    message='Log record contains non-compliant data',
-                    level='warning',
-                )
+            sentry_sdk.capture_event(
+                event={
+                    'message': 'Log record contains non-compliant data',
+                    'level': 'warning',
+                    'extra': {
+                        'Record': record,
+                        'Non Compliant Data': ncd,
+                    }
+                }
+            )
         except Exception:
             pass
 

@@ -16,7 +16,7 @@ def _get_sample_rate(environment: str) -> float:
     raise InvalidEnvironmentError(environment)
 
 
-def read_logger_config(config_path: str | None = None) -> dict[str, Any] | None:
+def read_logger_config(config_path: str | None = None) -> dict[str, Any]:
     if config_path is not None:
         if os.path.exists(config_path):
             with open(config_path, 'r') as f:
