@@ -1,12 +1,9 @@
-import sys
+import os
 from typing import Any
 
-from loguru import logger
-from sentry_sdk import init
-from sentry_sdk.integrations.fastapi import FastApiIntegration
-from sentry_sdk.integrations.loguru import LoguruIntegration
+import yaml
 
-from zimran.logging.exceptions import InvalidEnvironmentError
+from zimran.logging.exceptions import InvalidConfigurationError, InvalidEnvironmentError
 
 
 def _get_sample_rate(environment: str) -> float:
@@ -14,26 +11,18 @@ def _get_sample_rate(environment: str) -> float:
         return 0.2
 
     if environment == 'staging':
-        return 1
+        return 1.0
 
     raise InvalidEnvironmentError(environment)
 
 
-def setup_logger(debug: bool) -> None:
-    logger.remove()
+def read_logger_config(config_path: str | None = None) -> dict[str, Any]:
+    if config_path is not None:
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                config = yaml.safe_load(f)
+            return config
 
-    if debug:
-        logger.add(sys.stdout, level='DEBUG')
-    else:
-        logger.add(sys.stdout, level='INFO', serialize=True)
+        raise InvalidConfigurationError(config_path)
 
-
-def setup_sentry(dsn: str, environment: str, **kwargs: dict[str, Any]) -> None:
-    try:
-        sample_rate = _get_sample_rate(environment)
-    except InvalidEnvironmentError:
-        return
-
-    kwargs.setdefault('integrations', [FastApiIntegration(), LoguruIntegration()])  # type: ignore
-
-    init(dsn=dsn, environment=environment, sample_rate=sample_rate, **kwargs)  # type: ignore
+    return {}

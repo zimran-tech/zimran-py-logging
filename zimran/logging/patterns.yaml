@@ -1,0 +1,10 @@
+# basic GDPR patterns for sensitive and personal information
+# TODO: fill with patterns
+
+sensitive_patterns:
+  # email addresses
+  - '[A-Za-z0-9\._%+\-]+@[A-Za-z0-9\.\-]+\.[A-Za-z]{2,}'
+  # credit card numbers
+  - '\\b(?:\\d[ -]*?){13,16}\\b'
+  # IP addresses
+  - '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
