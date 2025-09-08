@@ -1,3 +1,4 @@
+import contextvars
 import sys
 from typing import Any
 
@@ -7,6 +8,8 @@ from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.loguru import LoguruIntegration
 
 from zimran.logging.exceptions import InvalidEnvironmentError
+
+user_agent_var = contextvars.ContextVar("user_agent", default="-")
 
 
 def _get_sample_rate(environment: str) -> float:
@@ -22,10 +25,14 @@ def _get_sample_rate(environment: str) -> float:
 def setup_logger(debug: bool) -> None:
     logger.remove()
 
+    def add_user_agent(record):
+        record["extra"]["user_agent"] = user_agent_var.get()
+        return record
+
     if debug:
-        logger.add(sys.stdout, level='DEBUG')
+        logger.add(sys.stdout, level='DEBUG', filter=add_user_agent)
     else:
-        logger.add(sys.stdout, level='INFO', serialize=True)
+        logger.add(sys.stdout, level='INFO', serialize=True, filter=add_user_agent)
 
 
 def setup_sentry(dsn: str, environment: str, **kwargs: dict[str, Any]) -> None:
