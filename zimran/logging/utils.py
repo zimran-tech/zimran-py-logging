@@ -34,6 +34,11 @@ def setup_sentry(dsn: str, environment: str, **kwargs: dict[str, Any]) -> None:
     except InvalidEnvironmentError:
         return
 
-    kwargs.setdefault('integrations', [FastApiIntegration(), LoguruIntegration()])  # type: ignore
+    # LoguruIntegration defaults its event/breadcrumb formats to LOGURU_FORMAT, which is prefixed
+    # with a timestamp. Sentry uses the formatted message as the event title and grouping key, so
+    # the default makes every error a unique, timestamp-cluttered issue. '{message}' keeps only the
+    # log message.
+    loguru_integration = LoguruIntegration(event_format='{message}', breadcrumb_format='{message}')
+    kwargs.setdefault('integrations', [FastApiIntegration(), loguru_integration])  # type: ignore
 
     init(dsn=dsn, environment=environment, sample_rate=sample_rate, **kwargs)  # type: ignore
